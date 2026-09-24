@@ -1,0 +1,290 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "40d9b4c7-a7a9-4249-8a34-8a8588e7ed66",
+      "name": "Telegram Trigger",
+      "webhookId": "7314b213-593e-4429-91e2-0ee166fa90c8",
+      "credentials": {
+        "telegramApi": {
+          "id": "mYeVmgZiCLsElsE8",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "11d8ecea-a64f-4252-866a-86e173949434",
+              "name": "queue",
+              "value": "={{ $json.message.text.trim().normalize(\"NFD\").replace(/[\\u0300-\\u036f]/g, \"\") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "43d32b65-d05e-4cdc-9371-c9c241e2c8e6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "https://api.openweathermap.org/data/2.5/weather",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.queue }},BR"
+            },
+            {
+              "name": "units",
+              "value": "metric"
+            },
+            {
+              "name": "lang",
+              "value": "pt_br"
+            },
+            {
+              "name": "appid",
+              "value": "OPENWEATHER_API_KEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        832,
+        0
+      ],
+      "id": "62185a5c-57cc-4207-a640-65fa2d695fc3",
+      "name": "HTTP Request",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const temp = Math.round($input.first().json.main.temp);\nconst city = $input.first().json.name;\n\nreturn {\n  json: {\n    message: `🌤️ A temperatura em ${city} é de ${temp}°C`\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        -96
+      ],
+      "id": "0dbb1ade-9a27-4845-a12c-329cd2bcd42f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1280,
+        16
+      ],
+      "id": "f4649e52-2e85-467a-9809-ee721aeb76ba",
+      "name": "Send a text message",
+      "webhookId": "4a8b3956-81bd-4f65-a7f3-61346ef279a2",
+      "credentials": {
+        "telegramApi": {
+          "id": "mYeVmgZiCLsElsE8",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "❌ Cidade não encontrada. Use o formato Cidade,UF (ex.: São Paulo,SP).",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        112
+      ],
+      "id": "cffb1b5c-ab0c-4ce1-847e-eb77b94928eb",
+      "name": "Send a text message1",
+      "webhookId": "10252118-78cb-429d-b3a0-d8f4cef2b351",
+      "credentials": {
+        "telegramApi": {
+          "id": "mYeVmgZiCLsElsE8",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "83687079-0792-4ac6-b334-538ef59f5b76",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "/start",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "15f2f54f-6803-41a8-8a88-cc023a4ec390",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "👋 Olá! Envie o nome de uma cidade para consultar o clima (ex.: São Paulo, SP).",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        416,
+        -112
+      ],
+      "id": "a08c9855-ad8d-4cf1-8c84-f9beb28bdc7a",
+      "name": "Send a text message2",
+      "webhookId": "c0b9e011-c26d-4b8d-8abc-2505338244ba",
+      "credentials": {
+        "telegramApi": {
+          "id": "mYeVmgZiCLsElsE8",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message2": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "2ef5b5f1-3483-438f-977e-dcc247f7bc2b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d9b334510c764e7f8c253f11e2fe0fc5d1a22e40e161a7046959ae10aa02f736"
+  },
+  "nodeGroups": [],
+  "id": "zgnVcCVNItBF7sxD",
+  "tags": []
+}
