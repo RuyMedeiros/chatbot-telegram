@@ -1,14 +1,56 @@
-Chatbot de Consulta Meteorológica no Telegram via n8nSolução de automação backend para consulta de condições meteorológicas em tempo real no Telegram, construída sobre o ecossistema n8n implantado em modo de fila (Queue Mode) com suporte de infraestrutura containerizada via Docker e Portainer.🛠️ Arquitetura da SoluçãoO projeto utiliza uma arquitetura de microsserviços containerizada para garantir alta disponibilidade, isolamento e persistência de dados.[ Telegram Client ] ──> [ Ngrok Tunnel ] ──> [ n8n Editor / Worker ]
-                                                    │
-                                     ┌──────────────┴──────────────┐
-                                     ▼                             ▼
-                            [ OpenWeather API ]             [ PostgreSQL / Redis ]
-Componentes de Infraestruturan8n (Queue Mode): Motor de orquestração dividido entre nó de edição (editor) e nós de processamento (workers).PostgreSQL: Banco de dados relacional para armazenamento de estados, execuções e metadados dos fluxos.Redis: In-memory data store responsável pelo gerenciamento da fila de tarefas entre o editor e os workers.Ngrok: Proxy reverso para exposição do webhook local via HTTPS com endpoint estático.Portainer: Interface de gerenciamento e monitoramento da stack de containers Docker.📋 Fluxo de Execução do WorkflowGatilho de Entrada (Telegram Trigger): Captura interações recebidas via Webhook da API de Bots do Telegram.Triagem de Comando (If):Fluxo /start: Identifica comandos de inicialização e dispara uma mensagem com instruções de uso.Fluxo Padrão: Encaminha mensagens de texto genéricas para o pipeline de consulta de clima.Normalização de Dados (Edit Fields): Sanitização do texto digitado pelo usuário, aplicando tratamento de caracteres para compatibilidade com o padrão aceito pela API externa.Integração de Clima (HTTP Request): Requisição à API do OpenWeather enviando os parâmetros de localização sanitizados com restrição geográfica (,BR) e unidade métrica (metric).Tratamento de Exceções e Resposta:Rota de Sucesso: Formatação e envio dos dados de temperatura coletados.Rota de Erro: Captura de falhas HTTP (cidades não localizadas ou entradas inválidas) com retorno amigável ao usuário.⚙️ Instalação e ConfiguraçãoPré-requisitosDocker e Docker Compose configurados no ambiente host.Bot criado no Telegram via @BotFather com o HTTP API Token.Chave de API (API Key) ativa na plataforma OpenWeather.Domínio reservado no Ngrok para recepção de webhooks.Configuração do AmbienteClone este repositório para o servidor local:Bashgit clone https://github.com/usuario/meu-repositorio.git
+# Chatbot de Consulta Meteorológica no Telegram via n8n
+
+Solução de automação backend para consulta de condições meteorológicas em tempo real no Telegram, construída sobre o ecossistema n8n implantado em modo de fila (Queue Mode) com suporte de infraestrutura containerizada via Docker e Portainer.
+
+---
+
+## Arquitetura da Solução
+
+O projeto utiliza uma arquitetura de microsserviços containerizada para garantir alta disponibilidade, isolamento e persistência de dados.
+
+- Telegram Client -> Ngrok Tunnel -> n8n Editor / Worker
+- OpenWeather API / PostgreSQL / Redis
+
+### Componentes de Infraestrutura
+
+- **n8n (Queue Mode):** Motor de orquestração dividido entre nó de edição (editor) e nós de processamento (workers).
+- **PostgreSQL:** Banco de dados relacional para armazenamento de estados, execuções e metadados dos fluxos.
+- **Redis:** In-memory data store responsável pelo gerenciamento da fila de tarefas entre o editor e os workers.
+- **Ngrok:** Proxy reverso para exposição do webhook local via HTTPS com endpoint estático.
+- **Portainer:** Interface de gerenciamento e monitoramento da stack de containers Docker.
+
+---
+
+## Fluxo de Execução do Workflow
+
+1. **Gatilho de Entrada (Telegram Trigger):** Captura interações recebidas via Webhook da API de Bots do Telegram.
+2. **Triagem de Comando (If):**
+   - **Fluxo /start:** Identifica comandos de inicialização e dispara uma mensagem com instruções de uso.
+   - **Fluxo Padrão:** Encaminha mensagens de texto genéricas para o pipeline de consulta de clima.
+3. **Normalização de Dados (Edit Fields):** Sanitização do texto digitado pelo usuário, aplicando tratamento de caracteres para compatibilidade com o padrão aceito pela API externa.
+4. **Integração de Clima (HTTP Request):** Requisição à API do OpenWeather enviando os parâmetros de localização sanitizados com restrição geográfica (,BR) e unidade métrica (metric).
+5. **Tratamento de Exceções e Resposta:**
+   - **Rota de Sucesso:** Formatação e envio dos dados de temperatura coletados.
+   - **Rota de Erro:** Captura de falhas HTTP (cidades não localizadas ou entradas inválidas) com retorno amigável ao usuário.
+
+---
+
+## Instalação e Configuração
+
+### Pré-requisitos
+
+- Docker e Docker Compose configurados no ambiente host.
+- Bot criado no Telegram via @BotFather com o HTTP API Token.
+- Chave de API (API Key) ativa na plataforma OpenWeather.
+- Domínio reservado no Ngrok para recepção de webhooks.
+
+### Configuração do Ambiente
+
+1. Clone este repositório para o servidor local:
+
+```bash
+git clone [https://github.com/usuario/meu-repositorio.git](https://github.com/usuario/meu-repositorio.git)
 cd meu-repositorio
-Crie um arquivo .env com as variáveis necessárias para a execução do docker-compose.yml:Snippet de códigoPOSTGRES_USER=n8n
-POSTGRES_PASSWORD=sua_senha_db
-POSTGRES_DB=n8n
-N8N_ENCRYPTION_KEY=sua_chave_criptografia
-WEBHOOK_URL=https://seu-dominio-ngrok.ngrok-free.dev/
-Suba a stack de serviços:Bashdocker compose up -d
-📥 Importação e Ativação do FluxoAcesse a interface do n8n (ex: http://localhost:5678).No painel superior do editor, acesse o menu ... $\rightarrow$ Import from file... e selecione o arquivo workflow-chatbot-telegram.json.Configure a credencial do nó do Telegram inserindo o Bot Token.Clique no botão Publish no canto superior direito para manter a execução contínua (24/7).🧪 Casos de Teste ValidadosEntradaComportamento EsperadoStatus/startRetorna instrução de uso para o usuário.PassouSão Paulo, SPConsulta e retorna a temperatura em °C.PassouCuritiba, PRConsulta e retorna a temperatura em °C.PassouEntradaInvalida123Rota de erro acionada com instrução de formato correto.Passou📄 LicençaEste projeto foi desenvolvido para fins acadêmicos e práticos de automação de processos. Sinta-se à vontade para utilizar e adaptar o código conforme necessário.
+```bash
+git clone [https://github.com/usuario/meu-repositorio.git](https://github.com/usuario/meu-repositorio.git)
+cd meu-repositorio
