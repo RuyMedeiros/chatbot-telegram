@@ -1,0 +1,129 @@
+services:
+  n8n-editor:
+    image: n8nio/n8n:latest
+    container_name: n8n-editor-ruy
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n-data:/home/node/.n8n
+    environment:
+      - WEBHOOK_URL=https://SEU-DOMINIO-NGROK.ngrok-free.dev/
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - TZ=America/Sao_Paulo
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      - N8N_GIT_NODE_DISABLE_BARE_REPOS=true
+
+      ## Postgres
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_DATABASE=postgres
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_USER=postgres
+      - DB_POSTGRESDB_PASSWORD=postgres
+
+      ## Queue Mode
+      - EXECUTION_MODE=queue
+      - QUEUE_BULL_REDIS_HOST=redis
+      - OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true
+
+      ## Variáveis esperadas das APIs
+      - TELEGRAM_BOT_TOKEN=seu_token_aqui
+      - OPENWEATHER_API_KEY=sua_chave_openweather_aqui
+
+    networks:
+      - n8n-ruy
+    depends_on:
+      - postgres
+      - redis
+    restart: always
+
+  n8n-worker:
+    image: n8nio/n8n:latest
+    command: worker
+    ports:
+      - "5679:5678"
+    volumes:
+      - n8n-data:/home/node/.n8n
+    environment:
+      - WEBHOOK_URL=https://SEU-DOMINIO-NGROK.ngrok-free.dev/
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - TZ=America/Sao_Paulo
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      - N8N_GIT_NODE_DISABLE_BARE_REPOS=true
+
+      ## Postgres
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_DATABASE=postgres
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_USER=postgres
+      - DB_POSTGRESDB_PASSWORD=postgres
+
+      ## Queue Mode
+      - EXECUTION_MODE=queue
+      - QUEUE_BULL_REDIS_HOST=redis
+      - OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true
+
+      ## Variáveis esperadas das APIs
+      - TELEGRAM_BOT_TOKEN=seu_token_aqui
+      - OPENWEATHER_API_KEY=sua_chave_openweather_aqui
+
+    networks:
+      - n8n-ruy
+    depends_on:
+      - postgres
+      - redis
+    restart: always
+
+  postgres:
+    image: ankane/pgvector
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+    networks:
+      - n8n-ruy
+    restart: always
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - n8n-ruy
+    restart: always
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    ports:
+      - "4040:4040"
+    volumes:
+      - ngrok-data:/etc
+    command: http --domain=SEU-DOMINIO-NGROK.ngrok-free.dev n8n-editor-ruy:5678
+    environment:
+      - NGROK_AUTHTOKEN=seu_authtoken_aqui
+    restart: always
+    networks:
+      - n8n-ruy
+    depends_on:
+      - n8n-editor
+
+networks:
+  n8n-ruy:
+    driver: bridge
+
+volumes:
+  n8n-data:
+  postgres-data:
+  redis-data:
+  ngrok-data:
